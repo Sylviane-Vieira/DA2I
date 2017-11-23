@@ -1,0 +1,83 @@
+body {
+    font-size: 15px;
+    color: #fff;
+}
+.bg-hero header {
+	position: relative;
+	background: #000;
+	max-width: 80%;
+	height: 80px;
+	line-height: 40px;
+	margin-left: 80px;
+}
+
+.bg-hero {
+	height: 800px;
+	width: 100%;
+	background: url('../images/hero-bg.jpg');
+}
+header h1 {
+	margin: 20px;
+	position: absolute;
+	width: auto;
+	font-size: 1.5em;
+}
+nav {
+	position: absolute;
+	right: 0;
+}
+nav ul {
+	right: 0;
+	position: relative;
+	top: 0;
+}
+nav li {
+    display: inline-block;
+    color: #848484;
+    margin: 0 10px;
+    font-weight: bold;
+}
+nav li:last-child() {
+    background: #39b54a;
+}
+
+nav li a:hover {
+    color: #fff;
+    font-weight: bold;
+}
+.div1 {
+    color: #fff;
+    width: 50%;
+}
+.div1 h1{
+    font-size: 1em;
+    text-transform: uppercase;
+    color: #848484;
+}
+.div1 p {
+	font-size: 3em;
+	font-weight: bold;
+	margin-top: 20px;
+	margin-bottom: 130px;
+}
+.div1 a {
+	border: 3px solid #fff;
+	padding: 10px;
+	border-radius: 4px;
+	font-weight: bold;
+	margin: 10px;
+	font-size: ;
+}
+.div1 div {
+	margin: 150px;
+}
+footer {
+    position: relative;
+    background-color: #000;
+    color: #848484;
+    width: 100%;
+}
+.row, row2,row3,row4 {
+    position: absolute;
+    width: 25%;
+}

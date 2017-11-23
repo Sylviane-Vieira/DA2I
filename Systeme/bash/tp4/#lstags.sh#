@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for tags in "$@"
+do
+    find $HOME/tags/$tags -print0 | grep -Fz $HOME/tags/$tags | head -n1
+done

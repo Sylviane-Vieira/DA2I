@@ -1,0 +1,52 @@
+#!/bin/bash
+
+sep=";"
+
+read ligne
+
+while test "$1"
+do
+    # Choix du séparateur
+    if test "x$1" = "x-d" ; then
+        shift
+        sep="$1"
+        shift
+    # Choix d'un numéro de colonne de tri
+    elif test "x$1" = "x-s" ; then
+        shift
+        expr 1 + $1 2>/dev/null 1>&2 ||
+            { echo "$1 pas un nombre" 1>&2 ; exit 1 ; }
+        keyopt="-k $1,$1"
+        shift
+    # Choix d'un nom de colonne de tri
+    elif test "x$1" = "x-S" ; then
+        shift
+        echo $ligne | grep -q "$sep$1$sep" ||
+            { echo "$1 pas une colonne" 1>&2 ; exit 1 ; }
+        n=$(echo $ligne |
+            sed -e "s/;$1;.*$/;/g" -e 's/[^;]*//g' -e 's/;/\n/g' | wc -l)
+        keyopt="-k $n,$n"
+        shift
+    fi
+done
+
+echo '<table border="1">'
+
+echo '  <thead>'
+echo '    <tr>'
+printf '      <th>'
+
+echo $ligne | sed -e "s!$sep\$!</th>!" -e "s!$sep!</th><th>!g"
+echo '    </tr>'
+echo '  </thead>'
+
+echo '  <tbody>'
+sort -t "$sep" $keyopt | 
+sed -e 's!^!    <tr>\n      <td>!' \
+    -e "s!$sep\$!</td>!g" \
+    -e "s!$sep!</td><td>!g" \
+    -e 's!$!\n    </tr>!'
+echo '  </tbody>'
+
+echo '</table>'
+

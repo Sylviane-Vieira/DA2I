@@ -1,0 +1,15 @@
+[ODBC]
+DRIVER=PostgreSQL ANSI(x64)
+UID=vieiras
+A1=7.4
+CX=1c205008b
+C2=dd_
+BI=0
+B1=8190
+B0=255
+A7=100
+A6=
+CA=d
+PORT=
+SERVER=psqlserv
+DATABASE=da2i

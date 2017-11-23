@@ -1,0 +1,80 @@
+/**
+ * Solarized Light theme for reveal.js.
+ * Author: Maxime Caboche
+ */
+
+
+// Default mixins and settings -----------------
+@import "../template/mixins";
+@import "../template/settings";
+// ---------------------------------------------
+
+
+
+// Include theme-specific fonts
+@import url(../../lib/font/league-gothic/league-gothic.css);
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic);
+
+
+/**
+ * Solarized colors by Ethan Schoonover
+ */
+html * {
+  color-profile: sRGB;
+  rendering-intent: auto;
+}
+
+// Solarized colors
+$base03:    #002b36;
+$base02:    #ef4527;
+$base01:    #ef4527;
+$base00:    #ef4527;
+$base0:     #839496;
+$base1:     #93a1a1;
+$base2:     #eee8d5;
+$base3:     #ffffff;
+$yellow:    #b58900;
+$orange:    #cb4b16;
+$red:       #dc322f;
+$magenta:   #d33682;
+$violet:    #6c71c4;
+$blue:      #ef4527;
+$cyan:      #2aa198;
+$green:     #859900;
+
+// Override theme settings (see ../template/settings.scss)
+$mainColor: $base00;
+$headingColor: $base01;
+$headingTextShadow: none;
+$backgroundColor: $base3;
+$linkColor: $blue;
+$linkColorHover: lighten( $linkColor, 20% );
+$selectionBackgroundColor: $magenta;
+
+// Background generator
+// @mixin bodyBackground() {
+// 	@include radial-gradient( rgba($base3,1), rgba(lighten($base3, 20%),1) );
+// }
+
+
+header{
+  h1{
+    font-family: "League Gothic";
+    font-weight: lighter;
+    background: $base00;
+    margin: 0;
+    color: $base3;
+    padding: 15px;
+    span{
+      position: absolute;
+      right: 15px;
+      font-size: 2em;
+      top: -5px;
+    }
+  }
+}
+
+
+// Theme template ------------------------------
+@import "../template/theme";
+// ---------------------------------------------

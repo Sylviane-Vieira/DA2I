@@ -1,0 +1,25 @@
+#!/bin/bash
+
+requete=/tmp/requete
+while true
+do
+    printf "HTTP/1.0 200 0K\r\n\r\nreçu\n" \
+    | nc.openbsd -l 8080 \
+    | sed 's/\r//g' >$requete
+
+    {
+        read cmd res http
+        read lig || echo "erreur : entête incorrecte"
+        while read lig ; do true ; done
+
+        if test "$cmd" != "GET" ; then
+            echo "erreur : action non gérée" 1>&2
+        elif test "$http" != "HTTP/1.0" ; then
+            echo "erreur : protocole non géré"
+        elif test "$res" = "/exit" ; then
+            break
+        else
+            echo $res
+        fi
+    } < $requete
+done

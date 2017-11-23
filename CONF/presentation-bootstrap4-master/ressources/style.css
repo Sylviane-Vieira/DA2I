@@ -1,0 +1,60 @@
+/*couleurs*/
+body {
+  color: #199EB8;
+  font-size: 15px; }
+
+.bg-hero {
+  height: 800px;
+  width: 100%;
+  background: url("../images/hero-bg.jpg"); }
+  .bg-hero header {
+    position: relative;
+    background: #000;
+    max-width: 80%;
+    height: 80px;
+    line-height: 40px;
+    margin-left: 80px; }
+
+header h1 {
+  margin: 20px;
+  position: absolute;
+  width: auto;
+  font-size: 1.5em; }
+
+nav {
+  position: absolute;
+  right: 0; }
+  nav ul {
+    position: relative;
+    top: 0; }
+  nav li {
+    display: inline-block;
+    color: #848484;
+    margin: 0 10px;
+    font-weight: bold; }
+  nav li:last-child {
+    background: #39b54a; }
+    nav li:last-child a:hover {
+      color: #FFF;
+      font-weight: bold; }
+
+.div1 {
+  color: #FFF;
+  width: 50%; }
+  .div1 h1 {
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: #848484; }
+  .div1 p {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 130px; }
+  .div1 a {
+    border: 3px solid #FFF;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin: 10px; }
+  .div1 div {
+    margin: 150px; }

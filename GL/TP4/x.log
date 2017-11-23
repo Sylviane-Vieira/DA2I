@@ -1,0 +1,33 @@
+sources/TabDict.java:29: error: cannot find symbol
+	    newPos = nbAssoc++;
+	    ^
+  symbol:   variable newPos
+  location: class TabDict<K,V>
+  where K,V are type-variables:
+    K extends Object declared in class TabDict
+    V extends Object declared in class TabDict
+sources/TabDict.java:30: error: cannot find symbol
+	    associations[newPos] = assoc;
+	                 ^
+  symbol:   variable newPos
+  location: class TabDict<K,V>
+  where K,V are type-variables:
+    K extends Object declared in class TabDict
+    V extends Object declared in class TabDict
+sources/TabDict.java:36: error: incompatible types: int cannot be converted to Couple<K,V>
+        associations[index] = 0;
+                              ^
+  where K,V are type-variables:
+    K extends Object declared in class TabDict
+    V extends Object declared in class TabDict
+sources/TabDict.java:51: error: cannot find symbol
+	    if (associations[i].contains(c)) {return i;}
+	                       ^
+  symbol:   method contains(K)
+  location: interface Couple<K,V>
+  where K,V are type-variables:
+    K extends Object declared in class TabDict
+    V extends Object declared in class TabDict
+Note: sources/TabDict.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+4 errors

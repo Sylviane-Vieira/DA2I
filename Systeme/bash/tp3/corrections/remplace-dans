@@ -1,0 +1,7 @@
+#!/bin/bash
+
+modele="$1"
+debut="--DEBUT_REMPLACEMENT--"
+fin="--FIN_REMPLACEMENT--"
+
+sed -e "/$fin/ r/dev/stdin" -e "/$debut/,/$fin/ d" $modele

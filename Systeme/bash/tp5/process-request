@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#variables
+method="GET"
+version="HTTP/1.1"
+
+#lire la déclaration
+read $method ressource $version
+
+#ignorer l'en-tête
+while [ `read line` != "\r\n" ]
+do
+    read $line
+done
+
+#traiter la methode et la version
+if [ ! $method ]; then
+    echo -e "HTTP/1.1 405 Method not allowed\r"
+    echo -e "\r"
+elif [ ! $version ]; then
+    echo -e "HTTP/1.1 505 HTTP version not supported\r"
+echo $method
+fi
+
+#traiter les actions sur le fichier
+IFS='/' read -a array <<< "$ressource"
+action="${array[0]}"
+fichier="${array[1]}"
+if [[ $action == contenu ]]
+then
+    if [ -f "$fichier" ]; then
+	echo -e "HTTP/1.1 200 OK\r"
+	cat "$fichier"
+	echo -e "\r"
+	echo $method $action $fichier $version
+    elif [ -d "$fichier" ]; then
+	echo -e "HTTP/1.1 406 Not acceptable\r"
+	echo -e "\r"
+    fi
+elif [[ $action == html ]]
+then
+     if [[ $fichier==*.csv ]]; then
+	 echo -e "HTTP/1.1 200 OK\r"
+	 "./csv2html" < "$fichier"
+     fi
+fi
+     
+	   

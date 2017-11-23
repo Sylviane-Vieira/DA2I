@@ -1,0 +1,80 @@
+
+/*couleurs*/
+$blanc:#FFF;
+$blue : #199EB8;
+$orange : #E04F00;
+$noir : #000;
+$vert: #39b54a;
+$gris: #848484;
+
+body{
+    color:$blue;
+    font-size:15px;
+}
+.bg-hero {
+	height: 800px;
+	width: 100%;
+	background: url('../images/hero-bg.jpg');
+    header{
+        position: relative;
+        background: $noir;
+        max-width: 80%;
+        height: 80px;
+        line-height: 40px;
+        margin-left: 80px;     
+    }
+}
+header {
+    h1 {
+        margin: 20px;
+        position: absolute;
+        width: auto;
+        font-size: 1.5em;
+    }
+}
+nav {
+	position: absolute;
+	right: 0;
+    ul {
+        position: relative;
+        top: 0;
+    }
+    li {
+        display: inline-block;
+        color: $gris;
+        margin: 0 10px;
+        font-weight: bold;
+    }
+    li:last-child {
+        background: $vert;
+        a:hover {
+            color: $blanc;
+            font-weight: bold;
+        }
+    }
+}
+.div1 {
+    color: $blanc;
+    width: 50%;
+    h1{
+        font-size: 1rem;
+        text-transform: uppercase;
+        color: #848484;
+    }
+    p {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 130px;
+    }
+    a {
+        border: 3px solid $blanc;
+        padding: 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        margin: 10px;
+    }
+    div {
+	   margin: 150px;
+    }
+}
