@@ -1,27 +1,29 @@
 package image ;
 
 import dictionnaire.correction.* ;
- 
+
 public abstract class ImageDictSuper extends ImageQuelconque {
     protected Dictionnaire points ;
 
     public ImageDictSuper(int w, int h) {
-	super(w,h);
-	this.initialiserPoints() ;
-    }
-
-    private boolean correct(int x, int y) {	
-	return ((x >= 0) && (x < largeur) && (y >= 0) && (y < hauteur)) ;
+	     super(w,h);
+	      this.initialiserPoints() ;
     }
 
     public void initialiserPoints() {
-	points = new TabDict() ;
+	     points = new TabDict() ;
     }
 
-    public abstract NiveauGris pointEn(int x, int y);
 
     public abstract void definirPoint(int x, int y, NiveauGris gris);
 
-
-    public abstract String toString();
+    public String toString() {
+      String s = largeur + "x" + hauteur ;
+      for (int y=0; y<hauteur; y++) {
+          s += "\n" ;
+          for (int x=0; x<largeur; x++)
+        s += this.pointEn(x, y) ;
+      }
+      return s ;
+    }
 }

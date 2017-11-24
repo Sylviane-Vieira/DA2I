@@ -13,35 +13,35 @@ public abstract class ImageQuelconque implements ImageGrise {
 	     return ((x >= 0) && (x < largeur) && (y >= 0) && (y < hauteur)) ;
     }
 
-	public abstract void initialiserPoints();
+    public abstract void initialiserPoints();
 
     private boolean incompatible(ImageGrise img) {
-	return (largeur != img.largeur()) || (hauteur != img.hauteur()) ;
+	     return (largeur != img.largeur()) || (hauteur != img.hauteur()) ;
     }
 
     public int largeur() { return largeur ; }
 
     public int hauteur() { return hauteur ; }
 
-	public abstract NiveauGris pointEn(int x, int y);
+    public abstract NiveauGris pointEn(int x, int y);
 
     public abstract void definirPoint(int x, int y, NiveauGris gris);
 
     public void randomize() {
-	for (int y=0; y<hauteur(); y++)
-	    for (int x=0; x<largeur() ; x++)
-		this.definirPoint(x, y, this.pointEn(x,y).randomizeNB()) ;
-    }
+    	for (int y=0; y<hauteur(); y++)
+    	    for (int x=0; x<largeur() ; x++)
+    		this.definirPoint(x, y, this.pointEn(x,y).randomizeNB()) ;
+        }
 
     public void allumer(int x, int y) {
-	if (this.correct(x,y))
-	    this.definirPoint(x, y, new NiveauGris(NiveauGris.NOIR)) ;
-    }
+    	if (this.correct(x,y))
+    	    this.definirPoint(x, y, new NiveauGris(NiveauGris.NOIR)) ;
+        }
 
     public void eteindre(int x, int y) {
-	if (this.correct(x,y))
-	    this.definirPoint(x, y, new NiveauGris(NiveauGris.BLANC)) ;
-    }
+    	if (this.correct(x,y))
+    	    this.definirPoint(x, y, new NiveauGris(NiveauGris.BLANC)) ;
+        }
 
     public int compterPoints(NiveauGris gris) {
     	int nombre = 0 ;

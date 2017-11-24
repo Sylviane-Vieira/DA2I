@@ -4,7 +4,7 @@ package image ;
 public class ImageTab implements ImageGrise {
     private int largeur;
     private int hauteur;
-    private NiveauGris[][] niveauGris;
+    public static NiveauGris[][] niveauGris;
 
     public ImageTab (int largeur, int hauteur){
 	this.largeur = largeur;

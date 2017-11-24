@@ -79,4 +79,3 @@ public class Catalogue
 	Afficheur.afficher(ellipse1(1,2).ajouter(ellipse2(-30)), 2) ;	
     }
 }
-

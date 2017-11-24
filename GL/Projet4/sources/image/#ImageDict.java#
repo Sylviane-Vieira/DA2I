@@ -4,12 +4,12 @@ package image ;
 public class ImageTab implements ImageGrise {
     private int largeur;
     private int hauteur;
-    private NiveauGris[][] niveauGris;
+    public static Couple<K,V>[] niveauGris;
 
     public ImageTab (int largeur, int hauteur){
 	this.largeur = largeur;
 	this.hauteur = hauteur;
-	this.niveauGris = new NiveauGris[largeur][hauteur];
+	this.niveauGris =(Couple<K,V>[]) new NiveauGris[largeur][hauteur];
 	for (int i=0; i<largeur; i++){
 	    for (int j=0; j<hauteur; j++){
 		niveauGris[i][j]=NiveauGris.BLANC;

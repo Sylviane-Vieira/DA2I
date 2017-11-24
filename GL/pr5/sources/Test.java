@@ -7,14 +7,13 @@ public class Test {
         else {
             // deux nombres passés sur la ligne de commande
             double x = new Double(args[0]) ;
-	    String operateur = args[1];
+	    String op = new String(args[1]) ;
             double y = new Double(args[2]) ;
             // la liste des opérations disponibles
-	    for (Operation o : Operation.values()){
-		if (operateur.equals(o.toString())){
-		    System.out.println(x + " " + o + " " + y + " = " + o.eval(x,y)) ;
+		for (Operation o : Operation.values()){
+			if (op.equals(o.toString()))
+			    System.out.println(x + " " + op + " " + y + "=" + o.eval(x,y)) ;
 		}
-	    }
-	}
+        }
     }
 }
