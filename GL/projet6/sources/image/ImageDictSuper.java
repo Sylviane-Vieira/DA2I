@@ -7,7 +7,7 @@ public abstract class ImageDictSuper extends ImageQuelconque {
 
     public ImageDictSuper(int w, int h) {
 	     super(w,h);
-	      this.initialiserPoints() ;
+       this.initialiserPoints() ;
     }
 
     public void initialiserPoints() {

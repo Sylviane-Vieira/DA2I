@@ -30,7 +30,7 @@ public abstract class ImageQuelconque implements ImageGrise {
     public void randomize() {
     	for (int y=0; y<hauteur(); y++)
     	    for (int x=0; x<largeur() ; x++)
-    		this.definirPoint(x, y, this.pointEn(x,y).randomizeNB()) ;
+    		    this.definirPoint(x, y, this.pointEn(x,y).randomizeNB()) ;
         }
 
     public void allumer(int x, int y) {
@@ -53,54 +53,65 @@ public abstract class ImageQuelconque implements ImageGrise {
     }
 
     public ImageGrise inverser() {
-	ImageGrise result =  dupliquer()  ;
-	for (int y=0; y<hauteur; y++)
-	    for (int x=0; x<largeur; x++)
-		result.definirPoint(x, y, this.pointEn(x,y).inverser()) ;
-	return result ;
+    	ImageGrise result =  dupliquer()  ;
+    	for (int y=0; y<hauteur; y++)
+    	    for (int x=0; x<largeur; x++)
+    		result.definirPoint(x, y, this.pointEn(x,y).inverser()) ;
+    	return result ;
     }
 
     public ImageGrise eclaircir() {
-	ImageGrise result =  dupliquer()  ;
-	for (int y=0; y<hauteur; y++)
-	    for (int x=0; x<largeur; x++)
-		result.definirPoint(x, y, this.pointEn(x,y).eclaircir()) ;
-	return result ;
+    	ImageGrise result =  dupliquer()  ;
+    	for (int y=0; y<hauteur; y++)
+    	    for (int x=0; x<largeur; x++)
+    		    result.definirPoint(x, y, this.pointEn(x,y).eclaircir()) ;
+    	return result ;
     }
 
     public ImageGrise assombrir() {
-	ImageGrise result = dupliquer() ;
-	for (int y=0; y<hauteur; y++)
-	    for (int x=0; x<largeur; x++)
-		result.definirPoint(x, y, this.pointEn(x,y).assombrir()) ;
-	return result ;
+    	ImageGrise result = dupliquer() ;
+    	for (int y=0; y<hauteur; y++)
+    	    for (int x=0; x<largeur; x++)
+    		    result.definirPoint(x, y, this.pointEn(x,y).assombrir()) ;
+    	return result ;
     }
 
     public abstract ImageGrise dupliquer();
 
-    public ImageGrise ajouter(ImageGrise img) {
-	ImageGrise result =  dupliquer() ;
-	if (this.incompatible(img))
-	    return result ;
-	for (int y=0; y<hauteur; y++)
-	    for (int x=0; x<largeur; x++)
-		result.definirPoint(x, y,
-				    this.pointEn(x,y).ajouter(img.pointEn(x,y))) ;
-	return result ;
+    public ImageGrise ajouter(ImageGrise img)
+      throws ImagesIncompatiblesException {
+        try{
+        	ImageGrise result =  dupliquer() ;
+        	if (this.incompatible(img))
+        	    return result ;
+        	for (int y=0; y<hauteur; y++)
+        	    for (int x=0; x<largeur; x++)
+        		    result.definirPoint(x, y,
+        				    this.pointEn(x,y).ajouter(img.pointEn(x,y))) ;
+        	return result ;
+        }
+        catch (ImagesIncompatiblesException e){
+          System.out.println ("Images incompatibles" + e.getMessage());
+        }
     }
 
     public ImageGrise soustraire(ImageGrise img) {
-	ImageGrise result =  dupliquer() ;
-	if (this.incompatible(img))
-	    return result ;
-	for (int y=0; y<hauteur; y++)
-	    for (int x=0; x<largeur; x++)
-		result.definirPoint(x, y,
-				    this.pointEn(x,y).soustraire(img.pointEn(x,y))) ;
-	return result ;
+      try{
+      	ImageGrise result =  dupliquer() ;
+      	if (this.incompatible(img))
+      	    return result ;
+      	for (int y=0; y<hauteur; y++)
+      	    for (int x=0; x<largeur; x++)
+      		result.definirPoint(x, y,
+      				    this.pointEn(x,y).soustraire(img.pointEn(x,y))) ;
+      	return result ;
+      } catch (ImagesIncompatiblesException e){
+        System.out.println ("Images incompatibles" + e.getMessage());
+      }
     }
 
     public ImageGrise XOR(ImageGrise img) {
+      try{
     	ImageGrise result = dupliquer();
     	if (this.incompatible(img))
     	    return result ;
@@ -109,6 +120,9 @@ public abstract class ImageQuelconque implements ImageGrise {
     		result.definirPoint(x, y,
     				    this.pointEn(x,y).XOR(img.pointEn(x,y))) ;
     	return result ;
+      }  catch (ImagesIncompatiblesException e){
+      System.out.println ("Images incompatibles" + e.getMessage());
+    }
     }
 
     public ImageGrise intersection(ImageGrise img) {
