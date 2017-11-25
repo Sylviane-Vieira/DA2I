@@ -80,60 +80,50 @@ public abstract class ImageQuelconque implements ImageGrise {
 
     public ImageGrise ajouter(ImageGrise img)
       throws ImagesIncompatiblesException {
-        try{
         	ImageGrise result =  dupliquer() ;
         	if (this.incompatible(img))
-        	    return result ;
+        	    throw new ImagesIncompatiblesException ("Images incompatibles");
         	for (int y=0; y<hauteur; y++)
         	    for (int x=0; x<largeur; x++)
         		    result.definirPoint(x, y,
         				    this.pointEn(x,y).ajouter(img.pointEn(x,y))) ;
         	return result ;
-        }
-        catch (ImagesIncompatiblesException e){
-          System.out.println ("Images incompatibles" + e.getMessage());
-        }
     }
 
-    public ImageGrise soustraire(ImageGrise img) {
-      try{
+    public ImageGrise soustraire(ImageGrise img)
+      throws ImagesIncompatiblesException {
       	ImageGrise result =  dupliquer() ;
       	if (this.incompatible(img))
-      	    return result ;
+            throw new ImagesIncompatiblesException ("Images incompatibles");
       	for (int y=0; y<hauteur; y++)
       	    for (int x=0; x<largeur; x++)
       		result.definirPoint(x, y,
       				    this.pointEn(x,y).soustraire(img.pointEn(x,y))) ;
       	return result ;
-      } catch (ImagesIncompatiblesException e){
-        System.out.println ("Images incompatibles" + e.getMessage());
-      }
     }
 
-    public ImageGrise XOR(ImageGrise img) {
-      try{
+    public ImageGrise XOR(ImageGrise img)
+      throws ImagesIncompatiblesException {
     	ImageGrise result = dupliquer();
     	if (this.incompatible(img))
-    	    return result ;
+          throw new ImagesIncompatiblesException ("Images incompatibles");
     	for (int y=0; y<hauteur; y++)
     	    for (int x=0; x<largeur; x++)
     		result.definirPoint(x, y,
     				    this.pointEn(x,y).XOR(img.pointEn(x,y))) ;
     	return result ;
-      }  catch (ImagesIncompatiblesException e){
-      System.out.println ("Images incompatibles" + e.getMessage());
-    }
     }
 
-    public ImageGrise intersection(ImageGrise img) {
-	ImageGrise result =  dupliquer();
-	if (this.incompatible(img))
-	    return result ;
-	for (int y=0; y<hauteur; y++)
-	    for (int x=0; x<largeur; x++)
-		if (this.pointEn(x,y).equals(img.pointEn(x,y)))
-		    result.definirPoint(x, y, this.pointEn(x,y)) ;
-	return result ;
+    public ImageGrise intersection(ImageGrise img)
+      throws ImagesIncompatiblesException {
+    	ImageGrise result =  dupliquer();
+    	if (this.incompatible(img))
+          throw new ImagesIncompatiblesException ("Images incompatibles");
+    	for (int y=0; y<hauteur; y++)
+    	    for (int x=0; x<largeur; x++)
+    		if (this.pointEn(x,y).equals(img.pointEn(x,y)))
+    		    result.definirPoint(x, y, this.pointEn(x,y)) ;
+    	return result ;
     }
 
 	public abstract String toString();

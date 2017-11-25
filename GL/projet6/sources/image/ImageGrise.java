@@ -43,7 +43,7 @@ public interface ImageGrise {
     /** Retourne une image qui représente "l'intersection" de l'image courante et de l'image
      * en paramètre : seuls les points qui ont le même niveau de gris dans les deux images sont
      * conservés (les deux images doivent être de même taille) */
-    ImageGrise intersection(ImageGrise img) ;
+    ImageGrise intersection(ImageGrise img) throws ImagesIncompatiblesException  ;
     /** Retourne le niveau de gris moyen de l'image. Pour le calculer, il faut faire la
      * moyenne des niveaux de chaque point de l'image (ce qui revient à compter combien il y
      * a de points de chaque niveau de gris possible) */
