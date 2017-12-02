@@ -13,5 +13,6 @@ public interface Compte
     void retirer(double somme) ;
     /** Effectue les opérations mensuelles de maintenance du compte. Cette méthode est
      * susceptible de déclencher des exceptions si des anomalies sont détectées. */
-    void operationsMensuelles() throws DepassementDecouvertExc, VersementsInsuffisantsExc ;
+    void operationsMensuelles()
+      throws DepassementDecouvertExc, VersementsInsuffisantsExc ;
 }
