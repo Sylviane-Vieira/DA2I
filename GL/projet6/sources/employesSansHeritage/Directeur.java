@@ -1,30 +1,24 @@
 package employesSansHeritage ;
 
-/*les commerciaux reçoivent chaque semaine une somme fixe,
-plus une prime représentant 1% du chiffre d’affaires qu’ils
-ont réalisé dans la semaine: Sh=Sfixe+C/100
-(C: chiffre d’affaires de la semaine pour le commercial*/
+/*le directeur est unique. Il reçoit chaque semaine une somme fixe,
+plus une prime représentant 0.4% du chiffre d’affaires global des commerciaux*/
 public class Directeur extends Commercial {
-  private static Phenix le_seul_directeur;
-  private double fixe, chiffre_affaires ;
-  private String nom ;
+  private static Directeur le_seul_directeur;
 
-  public Directeur (String nom) {
-    this.chiffre_affaires =null;
-  	super(nom, fixe);
+  public Directeur (String nom, double fixe) {
+    super(nom, fixe);
+    this.chiffreDAffaires = getCaTotal();
   }
 
-  public getDirecteur()
+  public Directeur getDirecteur()
   throws UniciteDuDirecteurException {
     if (le_seul_directeur != null)
       throw new UniciteDuDirecteurException ("Impossible de créer un deuxième directeur");
-    return le_seul_directeur = new Phenix();
+    return le_seul_directeur = new Directeur(nom, fixe);
   }
 
-  public void setTravail(double c) { this.chiffre_affaires = c ; }
-
   public double salaireHebdo() {
-  	return fixe + (this.chiffre_affaires/100) ;
+  	return fixe + (chiffreDAffaires*0.04) ;
   }
 
 }
