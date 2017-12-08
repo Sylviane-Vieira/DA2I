@@ -10,6 +10,7 @@ my $pere = $$;
 my @pids = ();
 
 foreach (1..$n){
+
   my $fils = fork();
   if ($fils == 0) {
     print "\ncréation du processus fils de pid $$ de père $pere\n";
