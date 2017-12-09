@@ -2,7 +2,6 @@
 
 use strict;
 use warnings;
-use Socket;
 use POSIX ":sys_wait_h";
 
 my $n = $ARGV[0];
