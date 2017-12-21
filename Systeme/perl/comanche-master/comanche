@@ -1,0 +1,514 @@
+#!/usr/bin/perl
+
+use Socket;
+use POSIX qw(:sys_wait_h strftime);
+use File::MimeInfo;
+
+$ARGV[0] =~ /^(start|stop|status|reload)$/ or die ("$0 [start|stop|status|reload]\n");
+$action = $ARGV[0];
+
+# CRLF
+$EOL = "\015\012";
+$EOR = $EOL x 2;
+$confFile = "comanche.conf";
+$pidFile = ".comanche.pid";
+
+@proj_type;
+@relative_path;
+@absolute_path;
+
+%GLOBAL;
+
+%reason_phrases = (
+    200, "OK",
+    400, "Bad Request",
+    404, "Not Found",
+    501, "Not Implemented",
+    503, "Service Unavailable"
+    );
+
+%signaux = (
+    status, "USR1",
+    stop, "USR2",
+    reload, "HUP"
+    );
+
+# prise en compte des la mort des ouvriers
+$SIG{CHLD} = \&FOSSOYEUR;
+$SIG{$signaux{status}} = \&PRINTSTATUS;
+$SIG{$signaux{stop}} = \&STOPDAEMON;
+$SIG{$signaux{reload}} = \&parse_conf;
+
+$recues = 0;
+$traitees = 0;
+
+select STDOUT;
+$| = 1;
+
+$action =~ /^start$/ && do {(-f $pidFile) ? die "Une instance de comanche existe déjà.\n" : startDaemon()};
+
+$action =~ /^(status|stop|reload)$/ && do {(-f $pidFile) ? sendSignal($signaux{$action}) : die "Le service n'est pas démarré.\n"};
+
+sub startDaemon
+{
+    parse_conf();
+
+    defined ($pid = fork)
+	or die ("Fork impossible : $!");
+    
+    # Code effectif du daemon
+    if ($pid == 0)
+    {
+	socket (SERVEUR, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
+	setsockopt (SERVEUR, SOL_SOCKET, SO_REUSEADDR, 1);
+	$mon_adresse = sockaddr_in ($conf{port}, INADDR_ANY)
+	    or die "sockaddr_in ($!)";
+	bind (SERVEUR, $mon_adresse)
+	    or die "bind ($!)";
+	listen (SERVEUR, SOMAXCONN)
+	    or die "listen ($!)";
+
+	eventlog("start", "local", $conf{port}, $conf{basedir});
+
+	while(1)
+	{
+	    # on reprend la boucle si interruption système
+	    accept (CLIENT, SERVEUR)
+		or do {next if $!{EINTR}; die "accept ($!)";};
+	    
+	    $recues++;
+
+	    senderror(503) unless scalar keys %children < $conf{clients};
+
+	    $traitees++;
+
+	    defined($pid = fork)
+		or die "Fork impossible : $!";
+
+	    if ($pid == 0) # Ouvrier
+	    {
+		select CLIENT;
+		$| = 1;
+
+		# Récupération de l'ip du client
+		$sockaddr = getpeername CLIENT;
+		($port_client, $ip_client) = unpack_sockaddr_in $sockaddr;
+		$ip_client = inet_ntoa $ip_client;
+
+		my ($requete, $ressource_rel) = acceptrequest();
+
+		my ($ressource_loc, $ressource_type) = getressource($ressource_rel);
+		$ressource_loc = $conf{basedir}."/".$ressource_loc;
+
+		# Pour les cgi et le log d'une 501 en attente d'une meilleure solution
+		$GLOBAL{requete} = $requete;
+		$GLOBAL{ress_rel} = $ressource_rel;
+		$GLOBAL{ress_loc} = $ressource_loc;
+
+		print STDOUT $GLOBAL{ress_loc}."\n"; # DEBUG
+
+	        my ($header_infos, $contenu) = construirereponse($ressource_loc, $ressource_type , $ressource_rel);
+
+		if ($contenu)
+		{
+		    sendheader(200, $requete, $header_infos, $ressource_type, $ressource_loc);
+		    print $contenu;
+		}
+		else
+		{
+		    senderror(404, $requete, $ressource_type);
+		}
+
+		closeouvrier(0);
+	    }
+	    else # Répartiteur
+	    {
+		$nbRequetesTraitees ++;
+		$children{$pid} = 1;
+		close (CLIENT);
+	    }
+
+	}
+    }
+
+    # Dans le père on conserve le PID du daemon
+    # dans le fichier .daemon.pid (à la manière d'apache dans /var/run).
+    # On protège le fichier en écriture pour éviter toute suppression 
+    # par l'utlisateur.
+    else
+    {
+	open(PID_FILE, ">", $pidFile)
+	    or die "open $!";
+	print PID_FILE $pid;
+	chmod 0400, $pidFile;
+	exit 0;
+    }
+}
+
+# Param : requête (chemin relatif demandé)
+# Retourne : tableau {ressource locale , type (stat ou dyn)}
+# ou undef si aucune correpondance n'est trouvée.
+sub getressource
+{
+    my ($ressource_rel, $ressource_loc, $type);
+
+    ($ressource_rel) = @_;
+
+    foreach (0..$#relative_path)
+    {
+	if ($ressource_rel =~ m{$relative_path[$_]})
+	{
+	    my $nom_res = $1;
+
+	    # Faute de mieux, on remplace \1 par ce qui match
+	    $ressource_loc = $absolute_path[$_] =~ s{\\1}{$nom_res}r;
+	    $type = $proj_type[$_];
+
+	    return ($ressource_loc, $type);
+	}
+    }
+    return undef;
+}
+
+# Prend en paramètre (ressource, type)
+sub construirereponse
+{
+    my $header_infos;
+    my $contenu;
+
+    if (defined @_)
+    {
+	my ($ressource_loc, $type, $ressource_rel) = @_;
+	my $mime;
+
+#	$ressource_loc =~ m{[^?]*\?(.*)};
+
+	if (-f $ressource_loc)
+	{
+	    ($mime, $contenu) = lireressource($ressource_loc, $type);
+	}
+	elsif (-d $ressource_loc)
+	{
+	    local $/ = "/";
+	    chomp($ressource_loc);
+	    local $/ = "\n";
+
+	    if (-f $ressource_loc."/".$conf{index})
+	    {
+		$projection = $ressource_loc."/".$conf{index};
+		($mime, $contenu) = lireressource($projection, $type);
+	    }
+	    else
+	    {
+		$mime = "text/html";
+		$contenu = lister($ressource_loc, $ressource_rel);
+	    }
+	}
+
+	# lireressource() retourne undef si le type mime est invalide
+	return undef if (! $contenu);
+
+	$header_infos = "Content-Type: ".$mime;
+	
+	return ($header_infos, $contenu);
+    }
+    return undef;
+}
+
+# Retourne le résultat (statique ou dynamique) d'une ressource
+# Retourne une erreur 501 Not Implemented si le mime n'est pas suporté
+# Param : chemin d'un fichier existant
+sub lireressource
+{
+    my ($ressource, $type) = @_;
+    
+    my ($mime, $contenu);
+
+    if ($type eq "get-s")
+    {
+	$mime = mimetype($ressource);
+
+	senderror(501, $GLOBAL{requete}, "get-s") if ($mime !~ m{((text/(.*))|(image/(jpeg|pjpeg)))});
+
+	open (FICHIER, "<", $ressource);
+	while (<FICHIER>)
+	{
+	    $contenu .= $_;
+	}
+	close (FICHIER);
+    }
+    else
+    {
+	# On récupère les paramètres de la requête
+	# qu'on affecte à la variable d'environnement $QUERY_STRING
+	$GLOBAL{ress_rel} =~ m{\?(.*)};
+	$ENV{QUERY_STRING} = $1;
+	# $ENV{REQUEST_URI} = $GLOBAL{ress_rel};
+
+	$mime = "text/html";
+	$contenu = `exec $ressource`;
+    }
+    return ($mime, $contenu);
+}
+
+
+# Retourne la liste du dossier sous la forme d'une page html
+# contenant des liens relatif
+# Param : ($dossier_local, $dossier_relatif)
+# Param : ($dossier_local, $dossier_relatif)
+sub lister
+{
+    my ($dossier_local, $dossier_relatif) = @_;
+
+    my $head_html = 
+	"<!DOCTYPE HTML PUBLIC '-//IETF//DTD HTML 2.0//EN'>\n"
+	."<html>\n"
+	."  <head>\n"
+	."    <title> Liste du dossier $dossier_relatif </title>\n"
+	."    <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />\n"
+	."  </head>\n"
+	."  <body>\n"
+	."    <h1>Liste des fichiers</h1>\n";
+
+    my $foot_html = "  </body>\n</html>";
+
+    my $contenu =  "";
+
+    opendir(REP,"$dossier_local") or die "Impossible d'ouvrir : $dossier_local";
+    my @liste = readdir(REP);
+
+    @liste = grep {$_ ne "."} @liste;
+    @liste = grep {$_ ne ".."} @liste;
+    closedir REP;
+
+    $contenu .= "      <ul>\n";
+
+    if (-d $dossier_local."/.." && $GLOBAL{ress_rel} ne "/")
+    {
+	$contenu .= "       <li><img src='/img/dossier.jpg' alt='[d]'><a href=\"$dossier_relatif../\"> ^-- Niveau supérieur</a></li>\n";
+    }
+
+    foreach my $i (@liste) {
+	if (-d $dossier_local."/".$i) {
+	    $contenu .= "       <li><img src='/img/dossier.jpg' alt='[d]'><a href=\"$dossier_relatif$i/\"> $i/</a></li>\n";
+	}else{
+	    $contenu .= "       <li><img src='/img/fichier.jpg' alt=[f]><a href=\"$dossier_relatif$i\"> $i</a></li>\n";
+	}
+    }
+
+    $contenu .= "      </ul>\n";
+
+    return $head_html.$contenu.$foot_html;
+}
+
+# Ecrit dans le fichier de log
+# Param : (type, machine, (port|requete), projection, statuscode)
+sub eventlog
+{
+    open(LOG_FILE, ">>$conf{logfile}")
+	or die "open $!";
+
+    print LOG_FILE join (";",  time,@_,"\n");
+
+    close LOG_FILE;
+}
+
+
+# Param : (statuscode, requete, header_infos, type_ressource, projection)
+sub sendheader
+{    
+    my ($status_code, $requete, $header_infos, $type_ressource, $projection) = @_;
+
+    print "HTTP/1.1 $status_code $reason_phrases{$status_code}".$EOL.
+	"$header_infos".$EOR;
+
+    eventlog($type_ressource, $ip_client, "$requete", "$projection", $status_code);
+}
+
+sub liredefault
+{
+    return lireressource($conf{default}, "get-s");
+}
+
+# Envoi une page d'erreur au client et ferme la connection
+# Param : (statuscode, requete, ressource_type)
+sub senderror
+{
+    my ($stat_code, $requete, $ressource_type) = @_;
+
+    my ($mime, $contenu);
+
+    if ($stat_code == 404)
+    {
+	($mime, $contenu) = liredefault();
+    }
+    else
+    {	
+	$mime = "text/html";
+	$contenu = "<html>\n".
+	    " <head>\n".
+	    "  <title>$stat_code $reason_phrases{$stat_code}</title>\n".
+	    " </head>\n".
+	    " <body>\n".
+	    "  <h1>$reason_phrases{$stat_code}</h1>\n".
+	    " </body>\n".
+	    "</html>\n";
+    }
+
+    sendheader($stat_code, $requete, "Content-Type: ".$mime, $ressource_type);
+    print $contenu;
+
+    closeouvrier(1);
+}
+
+# Termine l'ouvrier avec un code de retour
+# suivant le paramètre passé
+sub closeouvrier
+{
+    close(CLIENT);
+    close (SERVEUR);
+    exit $_[0];
+}
+
+# Filtre le header de la requete client
+# Si la requête est mal formée, retourne un message d'erreur au client,
+# sinon retourne un tableau contenant la ligne de requete et la ressource demandée
+sub acceptrequest
+{
+    # regex meta = {}[]()^$.|*+?\
+
+    <CLIENT> =~ /(?i)(^((?-i)GET)\s+(\/[^\s]*)\s+HTTP\/1\.1)\r?\n/
+	or senderror(400);
+
+    # requête
+    my $requete = $1;
+    # ressource
+    my $ressource = $3;
+
+    my $ok;
+    while(1)
+    {
+	$ligne = <CLIENT>;
+	$ok = 1 if ($ligne =~ /(?i)^host:\s*[^\s]*\s*\r?\n/);
+
+	if ($ligne =~ /^\r?\n/)
+	{
+	    return ($requete, $ressource) if $ok;
+	    senderror(400, $requete);
+	}
+    }
+}
+
+# Lit et charge la configuration de $confFile
+sub parse_conf {
+
+    my $current_port = $conf{port};
+
+    %conf = undef;
+    @proj_type = undef;
+    @relative_path = undef;
+    @absolute_path = undef;
+
+    $conf{basedir} = ".";
+
+    open (CONF, "$confFile")
+	or die ("open ($!)");
+
+    while (<CONF>) {
+	if (/^\s*(#|$)/)
+	{next}
+
+	elsif (/^\s*set\s+(port|default|index|logfile|clients|basedir)\s+([^\s#]*)\s*(#|$)/)
+	{
+	    $conf{$1} = $2;
+	}
+
+	elsif (/^\s*route\s+([^\s#]*)\s+to\s+([^\s#]*)\s*(#|$)/)
+	{
+	    push(@proj_type,"get-s");
+	    push(@relative_path,$1);
+	    push(@absolute_path,$2);
+	}
+
+	elsif (/^\s*exec\s+([^\s#]*)\s+from\s+([^\s#]*)\s*(#|$)/)
+	{
+	    push(@proj_type,"get-d");
+	    push(@relative_path,$1);
+	    push(@absolute_path,$2);
+	}
+	else
+	{
+	    chomp;
+	    die ("$confFile : erreur de syntaxe ligne $. : '$_'\n");
+	}
+    }
+    
+    if (defined $current_port && $conf{port} ne $current_port)
+    {
+	print STDOUT "Attention: commanche doit être redémarré pour prendre en compte la modification du port d'écoute.\n";
+    }
+    
+    close(CONF);
+}
+
+# Envoi le signal passé en paramètre au processus dont le pid
+# est contenu dans le fichier $pidFile
+# Param : signal à envoyer
+sub sendSignal
+{
+    select STDOUT;
+
+    ($signal) = @_;
+    open(PID_FILE, "<", $pidFile)
+	or die ("open $!");
+    $daemonPid = <PID_FILE>;
+    kill "$signal" => $daemonPid;
+    close PID_FILE;
+
+    # attente de la fin du daemon et supression du fichier $pidFile
+    if ($_[0] =~ /$signaux{stop}/)
+    {
+	while (kill 0 => $daemonPid) {print "."; select(undef,undef,undef,0.5);}
+	print "stopped\n";
+
+	# Supression du fichier pid
+	unlink($pidFile);
+    }
+
+    exit 0;
+}
+
+# Enregistre la mort d'un ouvrier
+sub FOSSOYEUR{
+    local $!;
+    my $pid;
+
+    # malgré le fait que le fossoyeur soit appelé par un SIGCHLD,
+    # On utilise quand même le WHNOHANG pour passer le moins de temps possible dans la fonction.
+    while (($pid = waitpid (-1, &WNOHANG)) > 0 )
+    {
+	delete $children{$pid};
+    }
+
+    $SIG{CHLD} = \&FOSSOYEUR;
+}
+
+# Ecrit le status sur la sortie standard
+# BUG : Methode utilisée écrit sur la sortie
+# du terminal utilisé pour démarrer le serveur
+sub PRINTSTATUS
+{
+    @ouvriers = keys %children;
+    print STDOUT "PID du daemon : $$\n".
+	"Requêtes - reçues: $recues, traitées: $traitees\n".
+	scalar @ouvriers." ouvriers actifs : (@ouvriers)\n";
+}
+
+# Arrête le serveur proprement
+sub STOPDAEMON
+{
+    while(wait > 0){}
+    close (SERVEUR);
+    eventlog("stop", "local", $conf{port}, $conf{basedir});
+    exit 0;
+}

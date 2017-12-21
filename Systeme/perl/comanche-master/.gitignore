@@ -1,0 +1,10 @@
+# on ignore tout
+*
+
+# sauf ce qui suit
+!.gitignore
+!comanche
+!comanche.conf
+!README.md
+!www/
+!www/*
