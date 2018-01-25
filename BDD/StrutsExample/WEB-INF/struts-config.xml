@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN" "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+    
+    <!-- ========== Data Source Configuration =============================== -->
+    <data-sources />
+    
+    <!-- ========== Form Bean Definitions ================================== -->
+    <form-beans>
+        <form-bean name="loginForm" type="form.LoginForm">
+            <form-property name="pass" type="java.lang.String" />
+            <form-property name="nom" type="java.lang.String" />
+        </form-bean>
+
+        <form-bean name="userForm" type="form.NewUserForm">
+            <form-property name="pass" type="java.lang.String" />
+            <form-property name="prenom" type="java.lang.String" />
+            <form-property name="nom" type="java.lang.String" />
+        </form-bean>
+        
+    </form-beans>
+    
+    <!-- ========== Global Exception Definitions ============================== -->
+    <global-exceptions />
+    
+    <!-- ========== Global Forward Definitions =============================== -->
+    <global-forwards />
+    
+    <!-- ========== Action Mapping Definitions =============================== -->
+    <action-mappings>
+        <action
+            path="/login"
+            input="/index.jsp"
+            name="loginForm"
+            type="action.LoginAction">
+            <forward name="log_failed" path="/index.jsp" />
+            <forward name="log_ok" path="/userList.jsp" />
+        </action>
+        
+        <action
+            path="/newUser"
+            input="/addUser.jsp"
+            name="userForm"
+            type="action.NewUserAction">
+            <forward name="add_failed" path="/addUser.jsp" />
+            <forward name="add_ok" path="/index.jsp" />
+        </action>
+
+    </action-mappings>
+    
+    <!-- ========== Controller Configuration ================================ -->
+    <controller />
+    
+    <!-- ========== Message Resources Definitions ============================ -->
+    
+    <!-- ========== Plug Ins Configuration ================================= -->
+    <message-resources parameter="resources.ApplicationResources" />
+    <plug-in className="plugin.InitBasePlugin" />
+</struts-config>
+
